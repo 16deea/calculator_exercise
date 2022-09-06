@@ -1,16 +1,16 @@
 package digital.metro.pricing.calculator;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 public class BasketCalculatorService {
 
-    private PriceRepository priceRepository;
+    private final PriceRepository priceRepository;
 
     @Autowired
     public BasketCalculatorService(PriceRepository priceRepository) {
@@ -24,20 +24,34 @@ public class BasketCalculatorService {
                         entry -> calculateArticle(entry, basket.getCustomerId())));
 
         BigDecimal totalAmount = pricedArticles.values().stream()
-                .reduce(BigDecimal.ONE, (a, b) -> a.add(b));
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new BasketCalculationResult(basket.getCustomerId(), pricedArticles, totalAmount);
     }
 
     public BigDecimal calculateArticle(BasketEntry be, String customerId) {
-        String ArticleId = be.getArticleId();
+        BigDecimal articlePrice = priceRepository.getPriceByArticleId(be.getArticleId());
+        BigDecimal totalPriceArticles = articlePrice.multiply(be.getQuantity());
 
         if (customerId != null) {
-            BigDecimal customerPrice = priceRepository.getPriceByArticleIdAndCustomerId(ArticleId, customerId);
+            totalPriceArticles = priceRepository.getDiscountByCustomerId(totalPriceArticles, customerId);
+        }
+
+        return totalPriceArticles;
+    }
+
+    //Old version
+    public BigDecimal calculateArticles(BasketEntry be, String customerId) {
+        String articleId = be.getArticleId();
+        BigDecimal quantity = be.getQuantity();
+
+        if (customerId != null) {
+            BigDecimal customerPrice = priceRepository.getPriceByArticleIdAndCustomerId(articleId, customerId);
             if (customerPrice != null) {
-                return customerPrice;
+                return customerPrice.multiply(quantity);
             }
         }
-        return priceRepository.getpricebyarticleId(ArticleId);
+
+        return priceRepository.getPriceByArticleId(articleId).multiply(quantity);
     }
 }

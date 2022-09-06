@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 public class BasketEntry {
 
-    private String articleId;
-    private BigDecimal quantity;
+    private final String articleId;
+    private final BigDecimal quantity;
 
     public BasketEntry(String articleId, BigDecimal quantity) {
         this.articleId = articleId;

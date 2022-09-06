@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @RestController
 public class CalculatorResource {
 
-    private BasketCalculatorService basketCalculatorService;
+    private final BasketCalculatorService basketCalculatorService;
 
     @Autowired
     public CalculatorResource(BasketCalculatorService basketCalculatorService) {
